@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>EFL Classroom Listening Game</title>
+  
+  <!-- Google Fonts: Balsamiq Sans as required -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ----------------------------------------------------
+       RESET & BASE STYLES
+       ---------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Balsamiq Sans', cursive, sans-serif;
+      background-color: #1a202c;
+      color: #2d3748;
+    }
+
+    /* Main Container optimized for SmartBoard Aspect Ratios */
+    #app-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* Fullscreen Floating Toggle Button */
+    #fullscreen-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.9);
+      border: 4px solid #4A5568;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-family: 'Balsamiq Sans', cursive, sans-serif;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #2D3748;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #2D3748;
+      transition: all 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    #fullscreen-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #2D3748;
+    }
+
+    /* ----------------------------------------------------
+       SCREEN 1: HOME SCREEN
+       ---------------------------------------------------- */
+    #home-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('homescreen.png');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .title-card {
+      background: rgba(255, 255, 255, 0.92);
+      padding: 30px 50px;
+      border-radius: 35px;
+      border: 6px solid #4C51BF;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+      text-align: center;
+      margin-bottom: 40px;
+      max-width: 80%;
+    }
+
+    .title-card h1 {
+      font-size: 4rem;
+      color: #4C51BF;
+      text-shadow: 2px 2px 0px #C3DAFE;
+      margin-bottom: 10px;
+    }
+
+    .title-card p {
+      font-size: 2rem;
+      color: #4A5568;
+    }
+
+    /* Huge SmartBoard Friendly Start Button */
+    .btn-start {
+      background: #48BB78;
+      color: #FFFFFF;
+      font-family: 'Balsamiq Sans', cursive, sans-serif;
+      font-size: 3.5rem;
+      font-weight: bold;
+      padding: 25px 80px;
+      border-radius: 50px;
+      border: 6px solid #2F855A;
+      box-shadow: 0 12px 0 #276749, 0 15px 25px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: all 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-start:active {
+      transform: translateY(8px);
+      box-shadow: 0 4px 0 #276749, 0 5px 10px rgba(0,0,0,0.3);
+    }
+
+    /* ----------------------------------------------------
+       SCREEN 2: GAME SCREEN
+       ---------------------------------------------------- */
+    #game-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('gamescreen.png');
+      background-size: cover;
+      background-position: center;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px 40px 40px;
+      z-index: 5;
+    }
+
+    /* HUD Bar (Top Section) */
+    .hud-bar {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-right: 170px; /* Space added to prevent overlap with floating Maximize button */
+    }
+
+    .hud-box {
+      background: rgba(255, 255, 255, 0.95);
+      border: 5px solid #2B6CB0;
+      border-radius: 25px;
+      padding: 12px 28px;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2B6CB0;
+      box-shadow: 0 8px 0 #1A365D;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-box.timer {
+      border-color: #DD6B20;
+      color: #DD6B20;
+      box-shadow: 0 8px 0 #7B341E;
+    }
+
+    /* Audio Replay Control Button */
+    .btn-replay-audio {
+      background: #ED8936;
+      border: 4px solid #C05621;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #7B341E;
+      transition: all 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-replay-audio:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #7B341E;
+    }
+
+    .btn-replay-audio svg {
+      width: 45px;
+      height: 45px;
+      fill: white;
+    }
+
+    /* Main Choice Cards Area */
+    .choices-container {
+      width: 100%;
+      max-width: 1100px;
+      height: 60vh;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .choice-card {
+      flex: 1;
+      height: 100%;
+      max-height: 480px;
+      background: #FFFFFF;
+      border: 8px solid #E2E8F0;
+      border-radius: 35px;
+      box-shadow: 0 15px 25px rgba(0,0,0,0.15), 0 8px 0 #CBD5E0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 25px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      touch-action: manipulation;
+      position: relative;
+    }
+
+    .choice-card:hover {
+      border-color: #4299E1;
+    }
+
+    .choice-card:active {
+      transform: scale(0.97);
+    }
+
+    /* Ensure strict image sizing & original aspect ratio maintenance */
+    .choice-card img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Feedback Animations on Choice Cards */
+    .choice-card.correct-feedback {
+      border-color: #48BB78 !important;
+      background-color: #F0FFF4;
+      animation: bounceCorrect 0.5s ease;
+      box-shadow: 0 0 30px #48BB78, 0 8px 0 #276749;
+    }
+
+    .choice-card.incorrect-feedback {
+      border-color: #E53E3E !important;
+      background-color: #FFF5F5;
+      animation: shakeIncorrect 0.4s ease;
+      box-shadow: 0 0 30px #E53E3E, 0 8px 0 #9B2C2C;
+    }
+
+    @keyframes bounceCorrect {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
+    @keyframes shakeIncorrect {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-15px); }
+      40%, 80% { transform: translateX(15px); }
+    }
+
+    /* ----------------------------------------------------
+       SCREEN 3: GAME OVER OVERLAY
+       ---------------------------------------------------- */
+    #game-over-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      backdrop-filter: blur(5px);
+    }
+
+    .game-over-modal {
+      background: #FFFFFF;
+      border: 8px solid #ED8936;
+      border-radius: 40px;
+      padding: 40px 70px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .game-over-modal h2 {
+      font-size: 4.5rem;
+      color: #C05621;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 0px #FEEBC8;
+    }
+
+    .game-over-modal .final-score {
+      font-size: 3rem;
+      color: #2D3748;
+      margin-bottom: 35px;
+    }
+
+    .btn-play-again {
+      background: #3182CE;
+      color: #FFFFFF;
+      font-family: 'Balsamiq Sans', cursive, sans-serif;
+      font-size: 3rem;
+      font-weight: bold;
+      padding: 20px 60px;
+      border-radius: 40px;
+      border: 6px solid #2B6CB0;
+      box-shadow: 0 10px 0 #2C5282, 0 10px 20px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: all 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-play-again:active {
+      transform: translateY(6px);
+      box-shadow: 0 4px 0 #2C5282;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="app-container">
+
+    <!-- Global Fullscreen Toggle Button -->
+    <button idfullscreen-btn id="fullscreen-btn" onclick="toggleFullScreen()">
+      ⛶ Maximize
+    </button>
+
+    <!-- 1. HOME SCREEN -->
+    <div id="home-screen">
+      <div class="title-card">
+        <h1>Listening Game</h1>
+        <p>Listen carefully and choose the correct picture!</p>
+      </div>
+      <button class="btn-start" onclick="startGame()">START</button>
+    </div>
+
+    <!-- 2. GAME PLAY SCREEN -->
+    <div id="game-screen">
+      <!-- HUD Header -->
+      <div class="hud-bar">
+        <div class="hud-box">
+          <span>Score:</span>
+          <span id="score-display">0</span>
+        </div>
+        
+        <!-- Manual Audio Replay Button -->
+        <button class="btn-replay-audio" onclick="replayAudio()" aria-label="Replay Audio">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        </button>
+
+        <div class="hud-box timer">
+          <span>Time:</span>
+          <span id="timer-display">60</span>s
+        </div>
+      </div>
+
+      <!-- Choice Images Container -->
+      <div class="choices-container">
+        <div class="choice-card" id="choice-left" onclick="handleAnswerSelect(0)">
+          <img id="img-left" src="" alt="Option Left" onerror="handleImageError(this)">
+        </div>
+        <div class="choice-card" id="choice-right" onclick="handleAnswerSelect(1)">
+          <img id="img-right" src="" alt="Option Right" onerror="handleImageError(this)">
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. GAME OVER OVERLAY SCREEN -->
+    <div id="game-over-screen">
+      <div class="game-over-modal">
+        <h2>GAME OVER!</h2>
+        <div class="final-score">Your Score: <span id="final-score-display">0</span></div>
+        <button class="btn-play-again" onclick="resetAndPlayAgain()">PLAY AGAIN</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /* ====================================================
+       VOCABULARY & ASSET CONFIGURATION
+       ==================================================== */
+    const VOCABULARY = [
+      { id: 'book', name: 'a book', image: 'a book.png', audio: 'a book.mp3' },
+      { id: 'pen', name: 'a pen', image: 'a pen.png', audio: 'a pen.mp3' },
+      { id: 'pencil', name: 'a pencil', image: 'a pencil.png', audio: 'a pencil.mp3' },
+      { id: 'ruler', name: 'a ruler', image: 'a ruler.png', audio: 'a ruler.mp3' },
+      { id: 'marker', name: 'a marker', image: 'a marker.png', audio: 'a marker.mp3' },
+      { id: 'eraser', name: 'an eraser', image: 'an eraser.png', audio: 'an eraser.mp3' }
+    ];
+
+    /* ====================================================
+       STATE VARIABLES
+       ==================================================== */
+    let score = 0;
+    let timerValue = 60;
+    let timerInterval = null;
+    let previousTargetId = null;
+    let currentQuestion = null;
+    let isTransitioning = false;
+
+    // Audio Instances
+    let bgmAudio = new Audio();
+    let vocabAudio = new Audio();
+    
+    // Background Music Configuration
+    bgmAudio.src = 'bgm.mp3'; // Continuous BGM local asset
+    bgmAudio.loop = true;
+    bgmAudio.volume = 0.10; // Exactly 10% volume
+
+    // Audio Context Synthesizer for Chime and Buzz Sound Effects
+    // Ensures crisp feedback FX without requiring external sound files
+    let audioCtx = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    /* ====================================================
+       IMAGE ERROR HANDLING
+       ==================================================== */
+    function handleImageError(imgElem) {
+      console.error(`[IMAGE ERROR] Failed to load local image asset: "${imgElem.src}"`);
+    }
+
+    /* ====================================================
+       AUDIO SYNTHESIZERS (Chime & Buzz FX)
+       ==================================================== */
+    function playCorrectChime() {
+      initAudioContext();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+
+      // Arpeggio pair: E5 to A5
+      osc1.frequency.setValueAtTime(659.25, now);
+      osc1.frequency.exponentialRampToValueAtTime(880.00, now + 0.15);
+      
+      osc2.frequency.setValueAtTime(880.00, now + 0.15);
+      osc2.frequency.exponentialRampToValueAtTime(1318.51, now + 0.35);
+
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc1.start(now);
+      osc2.start(now + 0.15);
+      osc1.stop(now + 0.15);
+      osc2.stop(now + 0.4);
+    }
+
+    function playIncorrectBuzz() {
+      initAudioContext();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+
+    /* ====================================================
+       CORE GAME LOGIC
+       ==================================================== */
+
+    // Start Game from Home Screen
+    function startGame() {
+      initAudioContext();
+      
+      // Hide Home, Show Game
+      document.getElementById('home-screen').style.display = 'none';
+      document.getElementById('game-screen').style.display = 'flex';
+      document.getElementById('game-over-screen').style.display = 'none';
+
+      // Reset Variables
+      score = 0;
+      timerValue = 60;
+      previousTargetId = null;
+      isTransitioning = false;
+      document.getElementById('score-display').innerText = score;
+      document.getElementById('timer-display').innerText = timerValue;
+
+      // Start Background Music at 10% volume
+      bgmAudio.play().catch(err => {
+        console.log("BGM playback notification:", err.message);
+      });
+
+      // Start Timer
+      clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 1000);
+
+      // Present First Question
+      nextQuestion();
+    }
+
+    // Countdown Timer Handler
+    function updateTimer() {
+      timerValue--;
+      document.getElementById('timer-display').innerText = timerValue;
+
+      if (timerValue <= 0) {
+        endGame();
+      }
+    }
+
+    // Generate Next Question
+    function nextQuestion() {
+      if (timerValue <= 0) return;
+
+      isTransitioning = false;
+
+      // Reset UI Card Feedbacks
+      const cardLeft = document.getElementById('choice-left');
+      const cardRight = document.getElementById('choice-right');
+      cardLeft.className = 'choice-card';
+      cardRight.className = 'choice-card';
+
+      // 1. Select Target Word (No back-to-back repetition)
+      let eligibleTargets = VOCABULARY.filter(item => item.id !== previousTargetId);
+      let targetItem = eligibleTargets[Math.floor(Math.random() * eligibleTargets.length)];
+      previousTargetId = targetItem.id;
+
+      // 2. Select Distractor Word
+      let distractorCandidates = VOCABULARY.filter(item => item.id !== targetItem.id);
+      let distractorItem = distractorCandidates[Math.floor(Math.random() * distractorCandidates.length)];
+
+      // 3. Randomize Positions (Left / Right)
+      let choices = [targetItem, distractorItem];
+      let correctIndex = Math.random() < 0.5 ? 0 : 1;
+      
+      if (correctIndex === 1) {
+        choices = [distractorItem, targetItem];
+      }
+
+      currentQuestion = {
+        target: targetItem,
+        choices: choices,
+        correctIndex: correctIndex
+      };
+
+      // 4. Update UI Image Elements
+      document.getElementById('img-left').src = choices[0].image;
+      document.getElementById('img-right').src = choices[1].image;
+
+      // 5. Play Target Audio & Handle BGM Ducking/Pausing
+      playVocabAudio(targetItem.audio);
+    }
+
+    // Vocabulary Audio Player with BGM Management
+    function playVocabAudio(audioPath) {
+      // Pause background music while target audio plays
+      if (!bgmAudio.paused) {
+        bgmAudio.pause();
+      }
+
+      vocabAudio.src = audioPath;
+      vocabAudio.currentTime = 0;
+
+      vocabAudio.onended = () => {
+        // Resume background music if game is active
+        if (timerValue > 0) {
+          bgmAudio.play().catch(e => console.log(e));
+        }
+      };
+
+      vocabAudio.onerror = (e) => {
+        console.error(`[AUDIO ERROR] Failed to load local audio file: "${audioPath}"`, e);
+        if (timerValue > 0) {
+          bgmAudio.play().catch(err => console.log(err));
+        }
+      };
+
+      vocabAudio.play().catch(err => {
+        console.log("Vocab audio play error:", err.message);
+        if (timerValue > 0) {
+          bgmAudio.play().catch(e => console.log(e));
+        }
+      });
+    }
+
+    // Manual Replay Audio Trigger
+    function replayAudio() {
+      if (currentQuestion && currentQuestion.target && !isTransitioning && timerValue > 0) {
+        playVocabAudio(currentQuestion.target.audio);
+      }
+    }
+
+    // Handle Student Answer Selection
+    function handleAnswerSelect(selectedIndex) {
+      if (isTransitioning || timerValue <= 0) return;
+
+      isTransitioning = true; // Block multiple taps during evaluation
+
+      const cardLeft = document.getElementById('choice-left');
+      const cardRight = document.getElementById('choice-right');
+      const selectedCard = selectedIndex === 0 ? cardLeft : cardRight;
+
+      if (selectedIndex === currentQuestion.correctIndex) {
+        // Correct Answer
+        score++;
+        document.getElementById('score-display').innerText = score;
+        selectedCard.classList.add('correct-feedback');
+        playCorrectChime();
+      } else {
+        // Incorrect Answer
+        selectedCard.classList.add('incorrect-feedback');
+        playIncorrectBuzz();
+      }
+
+      // Transition to next question after short feedback delay (800ms)
+      setTimeout(() => {
+        if (timerValue > 0) {
+          nextQuestion();
+        }
+      }, 800);
+    }
+
+    /* ====================================================
+       GAME OVER & REPLAY LOGIC
+       ==================================================== */
+    function endGame() {
+      clearInterval(timerInterval);
+      isTransitioning = true;
+
+      // Stop Audio
+      vocabAudio.pause();
+      vocabAudio.currentTime = 0;
+      bgmAudio.pause();
+      bgmAudio.currentTime = 0;
+
+      // Display Final Score
+      document.getElementById('final-score-display').innerText = score;
+      document.getElementById('game-over-screen').style.display = 'flex';
+    }
+
+    function resetAndPlayAgain() {
+      document.getElementById('game-over-screen').style.display = 'none';
+      startGame();
+    }
+
+    /* ====================================================
+       FULLSCREEN API TOGGLE
+       ==================================================== */
+    function toggleFullScreen() {
+      const container = document.documentElement;
+      const btn = document.getElementById('fullscreen-btn');
+
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (container.requestFullscreen) {
+          container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        }
+        btn.innerText = 'Exit Fullscreen';
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+        btn.innerText = '⛶ Maximize';
+      }
+    }
+  </script>
+</body>
+</html>
